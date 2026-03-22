@@ -201,6 +201,91 @@ INNER JOIN department d
 
 ---
 
+## UNION and UNION ALL
+
+`UNION` stacks results of two `SELECT` queries **vertically** (adds rows, not columns).
+
+### Rules
+- Both queries must have the **same number of columns**
+- Columns must have **compatible data types**
+- Column names come from the **first** SELECT
+
+---
+
+### UNION — removes duplicates
+
+```sql
+SELECT first_name, gender FROM employee_demographics WHERE gender = 'Male'
+UNION
+SELECT first_name, gender FROM employee_demographics WHERE age < 30;
+```
+
+| first_name | gender |
+|------------|--------|
+| John       | Male   |
+| Mark       | Male   |
+| Robert     | Male   |
+| Alice      | Female |
+| Anna       | Female |
+
+> John appears only once even though he matches both conditions (Male AND age < 30).
+> `UNION` automatically removes duplicate rows.
+
+---
+
+### UNION ALL — keeps duplicates
+
+```sql
+SELECT first_name, gender FROM employee_demographics WHERE gender = 'Male'
+UNION ALL
+SELECT first_name, gender FROM employee_demographics WHERE age < 30;
+```
+
+| first_name | gender |
+|------------|--------|
+| John       | Male   |
+| Mark       | Male   |
+| Robert     | Male   |
+| John       | Male   |
+| Alice      | Female |
+| Anna       | Female |
+
+> John appears **twice** — once from each SELECT. `UNION ALL` keeps all rows including duplicates.
+
+---
+
+### UNION across different tables
+
+```sql
+SELECT first_name, 'Demographics' AS source FROM employee_demographics
+UNION
+SELECT job_title, 'Salary' AS source FROM employee_salary;
+```
+
+| first_name       | source       |
+|------------------|--------------|
+| John             | Demographics |
+| Alice            | Demographics |
+| Mark             | Demographics |
+| Data Analyst     | Salary       |
+| HR Manager       | Salary       |
+| Senior Developer | Salary       |
+| Intern           | Salary       |
+
+> Useful for combining data from different tables into one result set.
+
+---
+
+### UNION vs JOIN
+
+| Feature      | JOIN                              | UNION                        |
+|--------------|-----------------------------------|------------------------------|
+| Direction    | Horizontal (adds columns)         | Vertical (adds rows)         |
+| Purpose      | Combine related columns           | Stack similar result sets    |
+| Condition    | Needs `ON` matching condition     | Needs same column count/type |
+
+---
+
 ## JOIN Types Summary
 
 | JOIN Type       | Returns                                              |
@@ -210,6 +295,8 @@ INNER JOIN department d
 | `RIGHT JOIN`    | All rows from right + matched from left (NULL if no match) |
 | `FULL OUTER`    | All rows from both (simulated via UNION in MySQL)    |
 | `SELF JOIN`     | Table joined with itself using aliases               |
+| `UNION`         | Stacks rows from two queries, removes duplicates     |
+| `UNION ALL`     | Stacks rows from two queries, keeps duplicates       |
 
 ---
 
@@ -221,3 +308,5 @@ INNER JOIN department d
 > - `LEFT JOIN` is the most commonly used join in real-world queries
 > - In a SELF JOIN, both aliases point to the same physical table
 > - Column names that exist in multiple tables must be prefixed with table alias to avoid ambiguity
+> - `UNION` is slower than `UNION ALL` because it does duplicate removal — use `UNION ALL` when you know there are no duplicates
+> - `UNION` column names are taken from the first SELECT statement
