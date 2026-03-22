@@ -20,7 +20,8 @@ Follow the sequence below for the best learning flow — each topic builds on th
 | 9 | [case_statement.md](./case_statement.md) | CASE for conditional logic, age groups, salary bands, pivot counting |
 | 10 | [subquery.md](./subquery.md) | Subquery in SELECT, WHERE IN / NOT IN, FROM as derived table, subquery vs JOIN |
 | 11 | [window_functions.md](./window_functions.md) | OVER, PARTITION BY, SUM rolling total, ROW_NUMBER, RANK, DENSE_RANK |
-| 12 | [query_execution_order.md](./query_execution_order.md) | How MySQL internally executes a query — FROM to LIMIT, common mistakes |
+| 12 | [ctes.md](./ctes.md) | CTE with WITH, multiple CTEs, CTE + window function, reusing CTEs |
+| 13 | [query_execution_order.md](./query_execution_order.md) | How MySQL internally executes a query — FROM to LIMIT, common mistakes |
 
 ---
 
