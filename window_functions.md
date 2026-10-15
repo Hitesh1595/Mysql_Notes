@@ -271,6 +271,19 @@ FROM employee_activity;
 > wrap in subquery + `WHERE month_diff = 1` to filter only consecutive-month rows
 > `PERIOD_DIFF` needs `YYYYMM` format ints, hence `DATE_FORMAT(..., '%Y%m')`
 
+**DATEDIFF for knowledge** — `DATEDIFF(date1, date2)` returns **days** between two dates (date1 - date2), not months/years. Use for consecutive-**day** checks instead:
+
+```sql
+SELECT employee_id, activity_date,
+    LAG(activity_date) OVER(PARTITION BY employee_id ORDER BY activity_date) AS prev_date,
+    DATEDIFF(activity_date, LAG(activity_date) OVER(PARTITION BY employee_id ORDER BY activity_date)) AS day_diff
+FROM employee_activity;
+```
+
+> `day_diff = 1` -> consecutive day (streak logic, e.g. daily login streak)
+> `PERIOD_DIFF` -> month granularity only, works on `YYYYMM` ints
+> `DATEDIFF` -> day granularity, works on actual `DATE`/`DATETIME` values
+
 ---
 
 ## Quick Reference
