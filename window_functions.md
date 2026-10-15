@@ -212,6 +212,67 @@ INNER JOIN employee_salary es
 
 ---
 
+## LAG
+
+Pulls value from **previous row** in partition. Good for row-to-row comparison (e.g. previous salary).
+
+```sql
+SELECT ed.first_name, gender, salary,
+    LAG(salary) OVER(PARTITION BY gender ORDER BY ed.employee_id) AS prev_salary
+FROM employee_demographics ed
+INNER JOIN employee_salary es ON ed.employee_id = es.employee_id;
+```
+
+| first_name | gender | salary | prev_salary |
+|------------|--------|--------|--------------|
+| Alice      | Female | 60000  | NULL         |
+| Anna       | Female | 45000  | 60000        |
+| John       | Male   | 50000  | NULL         |
+| Mark       | Male   | 90000  | 50000        |
+| Robert     | Male   | 80000  | 90000        |
+
+> First row per partition has no previous row -> `prev_salary` NULL
+> Optional args: `LAG(column, offset, default)` -> e.g. `LAG(salary, 1, 0)` returns `0` instead of `NULL` for first row
+> `LEAD()` same idea but pulls value from **next** row instead
+
+### Consecutive Months Case
+
+Common use: find employees active in **consecutive months** (e.g. login/sales log).
+
+**employee_activity**
+
+| employee_id | activity_month |
+|-------------|-----------------|
+| 1           | 2026-01         |
+| 1           | 2026-02         |
+| 1           | 2026-04         |
+| 2           | 2026-01         |
+| 2           | 2026-02         |
+| 2           | 2026-03         |
+
+```sql
+SELECT employee_id, activity_month,
+    LAG(activity_month) OVER(PARTITION BY employee_id ORDER BY activity_month) AS prev_month,
+    PERIOD_DIFF(DATE_FORMAT(activity_month, '%Y%m'), DATE_FORMAT(LAG(activity_month) OVER(PARTITION BY employee_id ORDER BY activity_month), '%Y%m')) AS month_diff
+FROM employee_activity;
+```
+
+| employee_id | activity_month | prev_month | month_diff |
+|-------------|-----------------|------------|------------|
+| 1           | 2026-01         | NULL       | NULL       |
+| 1           | 2026-02         | 2026-01    | 1          |
+| 1           | 2026-04         | 2026-02    | 2          |
+| 2           | 2026-01         | NULL       | NULL       |
+| 2           | 2026-02         | 2026-01    | 1          |
+| 2           | 2026-03         | 2026-02    | 1          |
+
+> `month_diff = 1` -> consecutive month, no gap
+> `month_diff > 1` -> gap in activity (employee 1 skipped 2026-03)
+> wrap in subquery + `WHERE month_diff = 1` to filter only consecutive-month rows
+> `PERIOD_DIFF` needs `YYYYMM` format ints, hence `DATE_FORMAT(..., '%Y%m')`
+
+---
+
 ## Quick Reference
 
 | Function       | Ties handled        | Skips rank? | Use case                          |
@@ -220,6 +281,7 @@ INNER JOIN employee_salary es
 | `RANK()`       | Same rank for ties  | Yes         | Competition-style ranking         |
 | `DENSE_RANK()` | Same rank for ties  | No          | Ranking without gaps              |
 | `SUM() OVER`   | N/A                 | N/A         | Running/rolling totals            |
+| `LAG()`        | N/A                 | N/A         | Compare row to previous row       |
 
 ---
 
